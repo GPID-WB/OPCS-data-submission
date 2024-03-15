@@ -8,15 +8,26 @@ DOWNLOAD POVERTY AT $2.15/DAY AN $6.85/DAY FROM WDI and save as:
 
 // use class data file for current FCV and IDA status
 // Source: https://github.com/GPID-WB/Class
-use "Class.dta", clear
+//use "Class.dta", clear
+
+if ("`c(username)'" == "wb384996") {
+	cd "C:\Users\wb384996\OneDrive - WBG\WorldBank\DECDG\PovcalNet Team\OPCS-data-submission"
+} 
+else  {
+	// add  your directory here 
+}
+use "https://github.com/GPID-WB/Class/raw/master/OutputData/CLASS.dta", clear
 bys code: gen tag = (_n==_N)							// keep the latest year
 keep if tag==1
 drop tag
 tempfile classdata
 save 	`classdata'
 
+cap which  wbopendata
+if (_rc) {
+	ssc install wbopendata
+}
 
-cap ssc install wbopendata
 wbopendata, indicator(si.pov.dday; si.pov.umic) clear 							// download poverty at IPL and the UMIC lines
 keep countrycode countryname regionname incomelevelname indicator* yr*
 ren countrycode code
@@ -43,7 +54,7 @@ order code countryname regionname incomelevelname ida_current fcv_current indica
 preserve
 drop if regionname=="Aggregates"												// Drop all regional aggregates
 drop if missing(regionname)														// Drop Africa East and West aggregates as well
-export excel using "csc_version_indicator_poverty_all_years.xlsx", first(varlabel) replace
+export excel using "output/csc_version_indicator_poverty_all_years.xlsx", first(varlabel) replace
 restore
 
 // country-level data 
@@ -55,7 +66,7 @@ drop if missing(yr)
 bys code indicatorcode (year): keep if _n==_N
 label var yr "Poverty headcount rate, %"
 label var year "Year"
-export excel using "csc_version_indicator_poverty_latest_year.xlsx", first(varlabel) replace
+export excel using "output/csc_version_indicator_poverty_latest_year.xlsx", first(varlabel) replace
 restore
 
 
@@ -65,7 +76,7 @@ keep if inlist(code,"AFE","AFW","EAP","ECA","LAC") | inlist(code,"MNA","SAS","SS
 		inlist(code,"LIC","LMC","UMC","HIC")	
 keep countryname indicatorcode indicatorname yr*
 label var countryname "Region"		
-export excel using "csc_version_indicator_poverty_aggregates.xlsx", first(varlabel) replace
+export excel using "output/csc_version_indicator_poverty_aggregates.xlsx", first(varlabel) replace
 
 ********************************************************************************
 exit
